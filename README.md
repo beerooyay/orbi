@@ -65,19 +65,19 @@ orbihex is a revolutionary framework for cross-linguistic semantic analysis usin
 ## visualizations
 
 ### semantic mass distributions
-![semantic mass distributions](analysis/language.png)
+![semantic mass distributions](media/visual1.png)
 *figure 1: semantic mass distributions across writing systems showing systematic differences between alphabetic and logographic systems.*
 
 ### phase topology patterns
-![phase topology](analysis/language2.png)
+![phase topology](media/visual2.png)
 *figure 2: universal 5-cluster phase topology with systematic deviations in complex writing systems.*
 
 ### writing system impact
-![writing system impact](analysis/language3.png)
+![writing system impact](media/visual3.png)
 *figure 3: inverse correlation between script complexity and semantic mass supporting the writing system complexity hypothesis.*
 
 ### language family clustering
-![language families](analysis/language4.png)
+![language families](media/visual4.png)
 *figure 4: hierarchical clustering based on semantic geometry validating phylogenetic relationships.*
 
 ## core components
