@@ -1,0 +1,325 @@
+\documentclass[12pt]{amsart}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsthm, mathtools, mathrsfs}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{microtype}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+\setlength{\parskip}{0.8em}
+\setlength{\parindent}{0em}
+
+% theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{axiom}[theorem]{Axiom}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
+
+% math macros
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\cH}{\mathcal{H}}
+\newcommand{\cM}{\mathcal{M}}
+\newcommand{\cS}{\mathcal{S}}
+
+\DeclareMathOperator{\KL}{KL}
+\DeclareMathOperator{\MI}{I}
+
+\title{Semantic Mass as a Quantitative Measure of Logographic Language Structure}
+\author{Blaize Rouyea\thanks{Corresponding author} \and Corey Bourgeois}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We introduce a quantitative framework for comparing lexical structure across writing systems based on a single geometric quantity, \emph{semantic mass}. Starting from a uniform nibble-based encoding of UTF-8 word forms, each lexical item is mapped to a trajectory in a fixed 16-point trigonometric basis on the unit circle. The center-of-mass norm of this trajectory defines semantic mass, a parameter-free scalar that can be aggregated at the language level. 
+
+Using 833{,}116 lexical items from 14 languages in the Open Multilingual WordNet, we show that alphabetic, abugida, and (mixed) logographic writing systems occupy distinct regions in semantic-mass space. Alphabetic systems cluster around higher average mass values (0.494--0.559), while logographic and mixed-logographic systems exhibit lower values (0.236--0.351). A complementary phase analysis reveals robust clustering patterns in the angular component, with a near-universal five-cluster structure in alphabetic languages and systematic deviations in Japanese and Thai. 
+
+Although the construction is purely geometric, the observed regularities align closely with established typological distinctions and support a \emph{Writing System Complexity Hypothesis}: under a fixed geometric operator, more complex scripts give rise to more diffuse lexical trajectories and correspondingly lower semantic mass. The framework is simple, reproducible, and applicable to any UTF-8 encoded lexicon, providing a new tool for cross-linguistic analysis in computational linguistics.
+\end{abstract}
+
+\section{Introduction}
+
+The relationship between writing systems and lexical organization has long been of interest in linguistics, psycholinguistics, and reading research. Orthographic systems differ not only in visual form but also in the mapping between graphemes, phonology, and morphemes. Alphabetic scripts such as English and Spanish represent phonemes; logographic systems such as Chinese rely on character units more closely tied to morphemes; abugidas such as Thai encode consonant-vowel combinations. A large literature has explored how such differences affect processing and acquisition \cite{perfetti2007}, but quantitative measures that compare lexical structure across script types remain limited.
+
+Most work in computational linguistics approaches lexical structure indirectly through distributional semantics. Word embeddings, for example, derive geometric representations from co-occurrence patterns in large corpora. While powerful, these methods conflate orthographic, phonological, and semantic factors and depend heavily on corpus composition and training objectives. In parallel, lexical resources such as WordNet provide structured vocabularies that are less sensitive to corpus frequency but are typically analysed symbolically rather than geometrically.
+
+In this paper we propose a complementary approach: we analyze lexical structure at the level of written forms alone, using a fixed geometric operator applied identically across languages. The central object is \emph{semantic mass}, a scalar derived from a trajectory that each word traces in a low-dimensional phase space determined solely by its UTF-8 representation. The construction is intentionally minimal. It does not rely on meanings, sense relations, or corpora, and it contains no learned parameters. Yet when applied to sizable lexical inventories, the resulting distributions organize languages in ways that correlate strongly with writing-system typology.
+
+The contributions of this work are threefold:
+\begin{enumerate}
+\item We give a first-principles derivation of semantic mass as a geometric invariant on encoded word forms, together with a simple phase-based extension.
+\item We apply this framework to 14 languages from the Open Multilingual WordNet, spanning alphabetic, abugida, logographic, and mixed-logographic scripts, and report systematic cross-linguistic patterns in both mass and phase structure.
+\item We formulate and empirically support a Writing System Complexity Hypothesis, relating script complexity scores to average semantic mass and phase-cluster behaviour.
+\end{enumerate}
+
+Our claims are deliberately modest in scope: we do not treat semantic mass as a direct measure of psychological semantics. Rather, we view it as a compact, reproducible summary of how lexical forms populate a simple geometric space under a uniform encoding. The fact that this summary aligns with typological categories suggests that the approach captures non-trivial structural information that may be useful for downstream linguistic analysis.
+
+\subsection{Writing Systems and Lexical Structure}
+
+Writing systems are commonly grouped into three broad categories:
+\begin{enumerate}
+\item \textbf{Alphabetic systems}: Symbols represent phonemes (e.g., English, Spanish).
+\item \textbf{Logographic systems}: Symbols represent morphemes or words (e.g., Chinese).
+\item \textbf{Abugida systems}: Symbols represent consonant-vowel combinations (e.g., Thai).
+\end{enumerate}
+
+Within these categories there is substantial variation in grapheme inventory size, positional rules, and orthographic depth. Prior work has examined how these differences affect reading processes, phonological awareness, and lexical access \cite{perfetti2007}. Less attention has been given to the purely geometric structure of lexical forms under a fixed encoding scheme. Because UTF-8 encodes all scripts into a shared byte-level representation, it provides a natural starting point for such a comparison.
+
+\section{Methodology}
+
+\subsection{Data Collection}
+
+We analyze 14 languages from the Open Multilingual WordNet project \cite{openmultilingualwordnet}, chosen to cover major writing-system families and to provide sufficient lexical coverage for stable statistics. Only distinct lemma forms are considered; inflected variants and multi-word expressions are excluded.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+Language & Word Count & Writing System \\
+\midrule
+English & 140,003 & LTR Alphabetic \\
+Spanish & 86,107 & LTR Alphabetic \\
+French & 48,783 & LTR Alphabetic \\
+Italian & 40,482 & LTR Alphabetic \\
+Portuguese & 44,794 & LTR Alphabetic \\
+Catalan & 64,022 & LTR Alphabetic \\
+Dutch & 42,091 & LTR Alphabetic \\
+Finnish & 117,681 & LTR Alphabetic \\
+Icelandic & 11,346 & LTR Alphabetic \\
+Norwegian & 4,183 & LTR Alphabetic \\
+Arabic & 19,074 & RTL Alphabetic \\
+Japanese & 90,948 & Mixed Logographic \\
+Mandarin & 60,893 & Logographic \\
+Thai & 62,709 & Abugida \\
+\bottomrule
+\end{tabular}
+\caption{Dataset composition by language and writing system. Counts refer to distinct wordnet lemmas.}
+\label{tab:dataset}
+\end{table}
+
+The resulting dataset comprises 833{,}116 lexical items. Because WordNet coverage is not uniform across languages, we report language-specific counts and consider these differences when interpreting results.
+
+\subsection{Semantic Mass Calculation}
+
+Our construction proceeds in three stages: nibble encoding, trajectory formation, and mass computation. Throughout, the operator is fixed and applies identically to all languages.
+
+\subsubsection{Nibble Encoding}
+
+Each word $w$ is first encoded as a UTF-8 byte sequence $(b_1,\dots,b_m)$. Each byte is then decomposed into two 4-bit nibbles
+\[
+b_j = 16 n_{2j-1} + n_{2j}, \qquad n_i \in \{0,\dots,15\}.
+\]
+The resulting nibble sequence is
+\[
+n(w) = \{n_1, n_2, \ldots, n_k\},
+\]
+where $k = 2m$. This step provides a uniform, script-independent representation in terms of integers from $0$ to $15$.
+
+\subsubsection{Phase Space Trajectory}
+
+We define a 16-point phase-space basis on the unit circle using trigonometric functions:
+\[
+\mathbf{b}_i = (\cos \theta_i, \sin \theta_i), \quad \theta_i = \frac{2\pi i}{16}, \quad i = 0, \ldots, 15.
+\]
+Each nibble index $n_t$ selects one of these basis points. We then construct a trajectory $\{\mathbf{h}_t\}_{t=1}^k$ by cumulative averaging:
+\[
+\mathbf{h}_t = \frac{(t-1)\mathbf{h}_{t-1} + \mathbf{b}_{n_t}}{t}, \qquad \mathbf{h}_0 = \mathbf{0}.
+\]
+Thus $\mathbf{h}_t$ is the running mean of the selected basis vectors up to position $t$, and $\mathbf{h}_k$ is the mean of all basis vectors visited by the word.
+
+\subsubsection{Semantic Mass Definition}
+
+To capture not only the final mean but also the evolution of the trajectory, we define the center of mass:
+\[
+\mathbf{c}(w) = \frac{1}{k}\sum_{t=1}^{k} \mathbf{h}_t.
+\]
+This averages intermediate states, weighting earlier positions slightly less than later ones because of the cumulative averaging in $\mathbf{h}_t$.
+
+\begin{definition}[Semantic Mass]
+The \emph{semantic mass} of a word $w$ is
+\[
+m(w) = \|\mathbf{c}(w)\|_2 = \sqrt{c_x^2 + c_y^2},
+\]
+where $\mathbf{c}(w) = (c_x,c_y)$.
+\end{definition}
+
+By construction, $0 \le m(w) \le 1$ for all $w$. Intuitively, $m(w)$ is larger when the nibble sequence concentrates its trajectory in a consistent region of the phase space and smaller when the trajectory is more diffuse.
+
+For a language $L$ with vocabulary $V_L$, we define the average semantic mass
+\[
+\overline{m}_L = \frac{1}{|V_L|}\sum_{w \in V_L} m(w).
+\]
+This quantity serves as the main language-level statistic analyzed in Section~\ref{sec:results}.
+
+\subsection{Phase Analysis}
+
+Semantic mass captures the magnitude of the center-of-mass vector. To study angular structure, we also compute a phase quantity. For each word we define
+\[
+\phi(w) = 2\pi \cdot \frac{1}{k}\sum_{t=1}^{k} \frac{n_t}{16},
+\]
+which approximates the average angular position implied by the nibble sequence before embedding into $\R^2$. The pair $(m(w),\phi(w))$ thus summarizes both the concentration and predominant direction of a word's trajectory.
+
+At the language level, we analyze the distribution of $\phi(w)$ by applying clustering algorithms on the unit circle. We primarily report cluster counts and relative densities, which exhibit stable patterns across languages.
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Semantic Mass Distribution by Writing System}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrr}
+\toprule
+Writing System & Languages & Mean Mass & Std.\ Dev. \\
+\midrule
+LTR Alphabetic & 10 & 0.511 & 0.041 \\
+RTL Alphabetic & 1 & 0.494 & 0.000 \\
+Logographic & 1 & 0.351 & 0.000 \\
+Mixed Logographic & 1 & 0.236 & 0.000 \\
+Abugida & 1 & 0.339 & 0.000 \\
+\bottomrule
+\end{tabular}
+\caption{Semantic mass statistics by writing system. Each entry reports the mean of $\overline{m}_L$ across languages of that type, together with across-language standard deviation.}
+\label{tab:mass_by_system}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{language.png}
+\caption{Semantic mass distributions across writing systems. Alphabetic systems (LTR: 0.511, RTL: 0.494) show consistently higher mass than logographic (0.351), mixed logographic (0.236), and abugida (0.339) systems.}
+\label{fig:mass_distribution}
+\end{figure}
+
+Figure~\ref{fig:mass_distribution} and Table~\ref{tab:mass_by_system} reveal a clear separation between script types. The ten LTR alphabetic languages cluster tightly around a mean of 0.511 (standard deviation 0.041). The single RTL alphabetic language (Arabic) falls within this range. In contrast, Mandarin (logographic), Japanese (mixed logographic), and Thai (abugida) occupy substantially lower regions of the mass spectrum.
+
+\subsection{Language Family Analysis}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrr}
+\toprule
+Language Family & Languages & Mean Mass & Std.\ Dev. \\
+\midrule
+Indo-European (Germanic) & 2 & 0.556 & 0.003 \\
+Indo-European (Romance) & 5 & 0.509 & 0.011 \\
+Finno-Ugric & 1 & 0.499 & 0.000 \\
+Indo-European (Nordic) & 2 & 0.478 & 0.070 \\
+Afro-Asiatic & 1 & 0.494 & 0.000 \\
+Japonic & 1 & 0.236 & 0.000 \\
+Sino-Tibetan & 1 & 0.351 & 0.000 \\
+Tai-Kadai & 1 & 0.339 & 0.000 \\
+\bottomrule
+\end{tabular}
+\caption{Semantic mass statistics by language family.}
+\label{tab:mass_by_family}
+\end{table}
+
+Within Indo-European, Germanic languages (English, Dutch) show the highest average mass, followed by Romance languages. The Nordic languages (Icelandic, Norwegian) exhibit slightly lower values, but remain closer to other alphabetic languages than to the Asian families. The three Asian families (Japonic, Sino-Tibetan, Tai-Kadai) form a distinct group with lower mass values.
+
+\subsection{Phase Topology}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{language2.png}
+\caption{Phase topology analysis. Top-left: phase distributions for selected languages. Top-right: number of dominant phase clusters per language. Bottom panels: circular phase plots and mass--phase relationships for alphabetic languages.}
+\label{fig:phase_topology}
+\end{figure}
+
+Phase analysis reveals a robust qualitative pattern. For ten of the fourteen languages, including all alphabetic systems, the phase distribution is well approximated by five dominant clusters (Figure~\ref{fig:phase_topology}, top-right). Japanese and Thai show four clusters, while Mandarin exhibits a more uniform distribution with less pronounced peaks. 
+
+The bottom-right panel of Figure~\ref{fig:phase_topology} relates average semantic mass to average phase among selected languages. Although the correlation is modest, languages with higher mass tend to have phase distributions concentrated within narrower angular ranges.
+
+\subsection{Writing System Impact}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{language3.png}
+\caption{Writing system and script complexity effects. Top-left: boxplots of average semantic mass by writing system. Top-right: corresponding average phase. Bottom-left: effect of writing direction. Bottom-right: semantic mass as a function of script complexity score with linear fit ($r=-0.89$, $p<0.001$).}
+\label{fig:writing_impact}
+\end{figure}
+
+To summarize script-level effects, we assign a coarse complexity score to each writing system (alphabetic: 1.0, abugida: 1.5, logographic: 2.0, mixed logographic: 2.5). The bottom-right panel of Figure~\ref{fig:writing_impact} plots average semantic mass against this score. A strong negative correlation emerges ($r=-0.89$, $p<0.001$), indicating that, under the fixed geometric operator, more complex scripts yield lower average mass.
+
+Writing direction (LTR vs.\ RTL) does not appear to have a large effect: Arabic falls within the range of LTR alphabetic languages both in mass and phase.
+
+\subsection{Language Family Clustering}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{language4.png}
+\caption{Language-family analysis. Top-left: semantic mass ranges by language family. Top-right: Indo-European subfamily distributions. Bottom-left: semantic distance matrix derived from mass and phase statistics. Bottom-right: hierarchical clustering dendrogram.}
+\label{fig:family_clustering}
+\end{figure}
+
+Using pairwise distances based on differences in mean mass and phase statistics, we construct a semantic-distance matrix and perform hierarchical clustering (Figure~\ref{fig:family_clustering}). The resulting dendrogram respects major genealogical divisions: Romance languages cluster together, Germanic languages group closely, and the three Asian language families form separate branches. This suggests that the geometric signatures obtained from semantic mass and phase carry phylogenetically informative signal, even though they are derived solely from written forms.
+
+\section{Discussion}
+
+\subsection{Theoretical Implications}
+
+The semantic-mass framework shows that a simple geometric operator, applied uniformly to UTF-8 encoded word forms, can recover meaningful structure aligned with writing-system typology and language family groupings. Because the operator is parameter-free and does not rely on linguistic annotation beyond the choice of lexical items, the observed differences must arise from systematic properties of the encoded forms themselves.
+
+The Writing System Complexity Hypothesis proposed here is purely operational: for the operator defined in Section~2, more complex scripts (in the sense of larger grapheme inventories and more heterogeneous code-point distributions) produce more diffuse trajectories and thus lower average semantic mass. This observation does not claim psychological or cognitive causation, but it does provide a compact quantitative summary of how script structure interacts with the UTF-8 encoding scheme.
+
+\subsection{Universal Phase Topology}
+
+The near-universal five-cluster pattern observed in alphabetic languages is striking given the simplicity of the underlying construction. One plausible explanation is that the combination of Latin-based code-point assignments and typical orthographic patterns yields nibble distributions with similar angular footprints. The deviations observed in Japanese and Thai, both of which employ more complex, multi-layered script systems, further support the view that phase topology is sensitive to script composition.
+
+\subsection{Limitations}
+
+Several limitations qualify our conclusions:
+\begin{itemize}
+\item The analysis relies on WordNet-style lexical resources. Coverage and lemma selection may vary by language, and function words are underrepresented relative to content words.
+\item The nibble encoding is only one of many possible choices. Encoding at the code-point level or adopting alternative bases in the phase space might shift the numerical values of mass and phase, although the qualitative patterns may persist.
+\item Script complexity scores are coarse and hand-assigned. A more principled measure of orthographic complexity would strengthen the quantitative relationship with semantic mass.
+\item The framework does not incorporate semantic relations or usage frequencies. It should therefore be seen as complementary to, not a replacement for, distributional and psycholinguistic approaches.
+\end{itemize}
+
+\section{Conclusion}
+
+We have defined semantic mass as a simple, mathematically explicit invariant of word forms under a uniform phase-space operator, and we have shown that its aggregate behaviour across languages aligns closely with writing-system categories and language families. Despite its minimal assumptions, the framework reveals regularities in how different scripts populate geometric space when passed through a common encoding pipeline.
+
+For computational linguistics, semantic mass and its associated phase metrics offer a compact descriptor of lexical inventories that is easy to compute, fully reproducible, and independent of corpora. Future work can explore extensions to subword units, investigate alternative encodings and bases, and examine how these geometric signatures interact with learned representations in multilingual models.
+
+\subsection*{Acknowledgments}
+
+We thank the Open Multilingual WordNet project for providing the lexical data used in this analysis. We also thank colleagues who provided feedback on early versions of the method and visualizations. Any remaining errors are our own.
+
+\begin{thebibliography}{99}
+
+\bibitem{wordnet2010}
+G.~A. Miller.
+\newblock WordNet: An electronic lexical database.
+\newblock MIT Press, 2010.
+
+\bibitem{openmultilingualwordnet}
+F.~Bond and R.~Foster.
+\newblock Linking and extending an open multilingual wordnet.
+\newblock In \emph{Proceedings of the 51st Annual Meeting of the Association for Computational Linguistics}, 2013.
+
+\bibitem{perfetti2007}
+C.~A. Perfetti.
+\newblock Reading ability: Lexical quality to comprehension.
+\newblock \emph{Scientific Studies of Reading}, 11(4):357--383, 2007.
+
+\end{thebibliography}
+
+\end{document}
